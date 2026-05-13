@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FB. Social Club</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Unbounded:wght@400;700;900&display=swap');
+
+  :root {
+    --bg:      #07090f;
+    --surf:    #0c0f1a;
+    --card:    #111828;
+    --card2:   #161e30;
+    --border:  #1c2538;
+    --accent:  #ffffff;
+    --acL:     rgba(255,255,255,0.08);
+    --blue:    #3b82f6;
+    --green:   #10d98a;
+    --yellow:  #f5b800;
+    --purple:  #a78bfa;
+    --red:     #ff4560;
+    --text:    #dde4f0;
+    --muted:   #48566e;
+    --dim:     #1a2235;
+    --safe-b:  env(safe-area-inset-bottom, 20px);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--surf);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .header-logo { display:flex; align-items:center; gap:10px; }
+  .header-icon {
+    width:38px; height:38px; border-radius:8px;
+    background:#000; display:flex; align-items:center;
+    justify-content:center; border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 0 12px rgba(255,255,255,0.1);
+  }
+  .header-title { font-family:'Unbounded',sans-serif; font-size:13px; font-weight:900; letter-spacing:-0.3px; color:#fff; }
+  .header-title span { color:#fff; opacity:0.6; }
+  .header-sub { color:var(--muted); font-size:9px; margin-top:1px; }
+  .header-kpi { text-align:right; }
+  .header-kpi-val { font-size:17px; font-weight:800; color:var(--text); }
+  .header-kpi-sub { font-size:9px; color:var(--green); }
+
+  /* ── Scroll area ── */
+  .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px 14px calc(70px + var(--safe-b));
+  }
+
+  /* ── Bottom nav ── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surf);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px 0 calc(8px + var(--safe-b));
+    flex-shrink: 0;
+    z-index: 50;
+  }
+  .nav-item {
+    flex: 1; display:flex; flex-direction:column;
+    align-items:center; gap:3px; cursor:pointer;
+    padding: 4px 0; border:none; background:transparent;
+    transition: all 0.15s;
+  }
+  .nav-icon { font-size:19px; line-height:1; }
+  .nav-label { font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--muted); letter-spacing:0.3px; }
+  .nav-item.active .nav-label { color:var(--accent); }
+  .nav-item.active .nav-icon { transform:scale(1.15); }
+
+  /* ── Section title ── */
+  .sec-title {
+    font-size:11px; color:var(--muted); font-weight:700;
+    text-transform:uppercase; letter-spacing:1px;
+    margin: 16px 0 8px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .sec-title:first-child { margin-top:0; }
+  .sec-title-dot { width:5px; height:5px; border-radius:50%; background:var(--accent); }
+
+  /* ── KPI row ── */
+  .kpi-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:4px; }
+  .kpi-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:12px; padding:12px 14px;
+  }
+  .kpi-label { color:var(--muted); font-size:9px; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+  .kpi-value { font-size:22px; font-weight:800; line-height:1; }
+  .kpi-sub { color:var(--muted); font-size:9px; margin-top:4px; }
+
+  /* ── Agent cards ── */
+  .agent-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:13px; padding:13px 14px;
+    display:flex; align-items:center; gap:12px;
+    margin-bottom:8px; cursor:pointer; transition:all 0.15s;
+    active: background var(--card2);
+  }
+  .agent-card:active { background:var(--card2); transform:scale(0.98); }
+  .agent-avatar {
+    width:42px; height:42px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:21px; flex-shrink:0;
+  }
+  .agent-name { font-weight:700; font-size:14px; }
+  .agent-role { font-size:9px; color:var(--muted); margin-top:2px; font-weight:600; letter-spacing:0.5px; }
+  .agent-model {
+    font-size:9px; padding:2px 7px; border-radius:5px;
+    background:var(--dim); color:var(--muted);
+    margin-top:5px; display:inline-block;
+  }
+  .agent-dot {
+    margin-left:auto; width:8px; height:8px;
+    border-radius:50%; flex-shrink:0;
+  }
+  .agent-dot.online { background:var(--green); box-shadow:0 0 0 3px rgba(16,217,138,0.2); }
+
+  /* ── Task items ── */
+  .task-item {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:11px; padding:12px 14px;
+    display:flex; align-items:flex-start; gap:10px;
+    margin-bottom:7px;
+  }
+  .task-check {
+    width:18px; height:18px; border-radius:5px;
+    border:1.5px solid var(--border); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; margin-top:1px; transition:all 0.15s;
+  }
+  .task-check.done { background:var(--accent); border-color:var(--accent); }
+  .task-text { font-size:12px; line-height:1.5; flex:1; }
+  .task-text.done { color:var(--muted); text-decoration:line-through; }
+  .task-badges { display:flex; gap:5px; margin-top:6px; flex-wrap:wrap; }
+  .badge {
+    font-size:9px; padding:2px 7px; border-radius:20px;
+    font-weight:700; display:inline-flex; align-items:center; gap:3px;
+  }
+
+  /* ── Account rows ── */
+  .bm-header {
+    display:flex; align-items:center; gap:8px;
+    padding: 10px 14px 8px;
+    background:var(--surf); border-radius:10px 10px 0 0;
+    border:1px solid var(--border); border-bottom:none;
+    margin-top:10px;
+  }
+  .bm-name { font-weight:700; font-size:12px; }
+  .bm-id { font-size:9px; color:var(--muted); }
+  .acc-table {
+    border:1px solid var(--border); border-radius:0 0 12px 12px;
+    overflow:hidden; margin-bottom:4px;
+  }
+  .acc-row {
+    display:grid; grid-template-columns:1fr auto auto auto;
+    gap:8px; padding:10px 14px; align-items:center;
+    border-top:1px solid rgba(28,37,56,0.5);
+    font-size:11px;
+  }
+  .acc-row:first-child { border-top:none; }
+  .acc-name { font-weight:500; color:var(--text); }
+  .acc-roas { font-weight:800; font-family:'JetBrains Mono',monospace; }
+  .acc-cpl { font-family:'JetBrains Mono',monospace; color:var(--muted); }
+
+  /* ── Bar chart ── */
+  .bar-wrap { display:flex; align-items:flex-end; gap:6px; height:70px; }
+  .bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .bar { width:100%; border-radius:3px 3px 0 0; transition:height 0.5s; }
+  .bar-label { font-size:8px; color:var(--muted); }
+
+  /* ── Log ── */
+  .log-item {
+    display:flex; gap:10px; padding:9px 0;
+    border-bottom:1px solid rgba(28,37,56,0.4);
+    font-size:11px;
+  }
+  .log-time { color:var(--muted); flex-shrink:0; font-size:10px; padding-top:1px; }
+  .log-agent { font-weight:700; flex-shrink:0; width:60px; }
+  .log-msg { color:var(--text); line-height:1.4; }
+
+  /* ── Chat modal ── */
+  .chat-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.7);
+    z-index:100; display:flex; flex-direction:column;
+    animation:fadeIn 0.2s;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .chat-modal {
+    margin-top:auto; background:var(--card);
+    border-radius:20px 20px 0 0; border-top:1px solid var(--border);
+    display:flex; flex-direction:column;
+    height:88dvh;
+    animation:slideUp 0.25s cubic-bezier(.25,.46,.45,.94);
+  }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .chat-handle {
+    width:36px; height:4px; border-radius:2px;
+    background:var(--border); margin:10px auto 0;
+  }
+  .chat-header {
+    display:flex; align-items:center; gap:12px;
+    padding:12px 16px 12px;
+    border-bottom:1px solid var(--border);
+  }
+  .chat-close {
+    margin-left:auto; background:var(--dim); border:none;
+    color:var(--muted); width:30px; height:30px; border-radius:50%;
+    font-size:16px; cursor:pointer; display:flex;
+    align-items:center; justify-content:center;
+  }
+  .chat-messages {
+    flex:1; overflow-y:auto; padding:14px 14px 8px;
+    display:flex; flex-direction:column; gap:10px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .msg-wrap { display:flex; }
+  .msg-wrap.user { justify-content:flex-end; }
+  .msg-bubble {
+    max-width:82%; padding:10px 13px; border-radius:16px;
+    font-size:12px; line-height:1.6;
+  }
+  .msg-bubble.user { border-radius:16px 16px 4px 16px; color:#fff; }
+  .msg-bubble.bot {
+    background:var(--card2); border:1px solid var(--border);
+    border-radius:16px 16px 16px 4px; color:var(--text);
+  }
+  .typing {
+    display:flex; gap:4px; align-items:center;
+    padding:10px 14px; background:var(--card2);
+    border:1px solid var(--border); border-radius:16px 16px 16px 4px;
+    width:fit-content;
+  }
+  .typing span {
+    width:6px; height:6px; border-radius:50%;
+    animation:bounce 0.8s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay:0.15s; }
+  .typing span:nth-child(3) { animation-delay:0.3s; }
+  @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
+  .chat-input-row {
+    display:flex; gap:8px; padding:10px 14px;
+    padding-bottom:calc(10px + var(--safe-b));
+    border-top:1px solid var(--border);
+    background:var(--surf);
+  }
+  .chat-input {
+    flex:1; background:var(--card); border:1px solid var(--border);
+    color:var(--text); border-radius:12px; padding:10px 13px;
+    font-size:13px; font-family:inherit; outline:none;
+    resize:none; max-height:80px;
+  }
+  .chat-send {
+    width:42px; height:42px; border-radius:12px; border:none;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; cursor:pointer; flex-shrink:0;
+    transition:background 0.2s; align-self:flex-end;
+  }
+
+  /* ── Quick actions ── */
+  .quick-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .quick-btn {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:12px; padding:12px; cursor:pointer;
+    text-align:left; transition:all 0.15s; display:flex;
+    flex-direction:column; gap:4px;
+  }
+  .quick-btn:active { transform:scale(0.97); background:var(--card2); }
+  .quick-icon { font-size:20px; margin-bottom:2px; }
+  .quick-label { font-size:11px; font-weight:700; color:var(--text); }
+  .quick-sub { font-size:9px; color:var(--muted); line-height:1.4; }
+
+  /* ── Status badge ── */
+  .status-dot {
+    width:6px; height:6px; border-radius:50%;
+    display:inline-block; margin-right:4px;
+  }
+
+  /* ── Proxy row & modal ── */
+  .acc-row { grid-template-columns: 1fr auto auto auto; }
+  .proxy-line {
+    grid-column: 1 / -1;
+    display:flex; align-items:center; gap:8px;
+    margin-top:8px; padding:7px 9px;
+    background:rgba(255,255,255,0.025);
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:10px; cursor:pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .proxy-line:active { background:rgba(255,255,255,0.05); }
+  .proxy-line.empty { color:var(--muted); border-style:dashed; }
+  .proxy-line.empty:active { color:var(--text); border-color:var(--accent); }
+  .proxy-line .pl-icon { font-size:11px; line-height:1; }
+  .proxy-line .pl-host {
+    font-family:'JetBrains Mono',monospace;
+    color:var(--text); flex:1; min-width:0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .proxy-line .pl-type {
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px; padding:2px 6px;
+    background:var(--dim); border-radius:4px;
+    color:var(--muted); letter-spacing:0.5px;
+  }
+  .proxy-line .pl-status {
+    width:6px; height:6px; border-radius:50%;
+    flex-shrink:0;
+  }
+  .proxy-line .pl-edit { color:var(--muted); font-size:11px; }
+
+  .proxy-modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.7);
+    z-index:200; display:none; flex-direction:column;
+    animation:fadeIn 0.2s;
+  }
+  .proxy-modal-overlay.open { display:flex; }
+  .proxy-modal {
+    margin-top:auto; background:var(--card);
+    border-radius:20px 20px 0 0; border-top:1px solid var(--border);
+    padding:0 16px calc(20px + var(--safe-b));
+    animation:slideUp 0.25s cubic-bezier(.25,.46,.45,.94);
+    max-height:88dvh; overflow-y:auto;
+  }
+  .proxy-modal-handle {
+    width:36px; height:4px; border-radius:2px;
+    background:var(--border); margin:10px auto 14px;
+  }
+  .proxy-modal h3 {
+    font-family:'Unbounded',sans-serif; font-size:13px;
+    font-weight:900; color:#fff; margin-bottom:4px;
+  }
+  .proxy-modal-sub {
+    font-size:10px; color:var(--muted); margin-bottom:14px;
+  }
+  .proxy-form-row { margin-bottom:10px; }
+  .proxy-form-row label {
+    display:block; font-size:9px; color:var(--muted);
+    text-transform:uppercase; letter-spacing:0.8px;
+    font-weight:700; margin-bottom:4px;
+  }
+  .proxy-input, .proxy-select {
+    width:100%; box-sizing:border-box;
+    background:var(--surf); border:1px solid var(--border);
+    border-radius:8px; padding:10px 12px;
+    color:var(--text); font-size:12px;
+    font-family:'JetBrains Mono',monospace;
+    -webkit-appearance:none; appearance:none;
+    outline:none; transition:border-color 0.15s;
+  }
+  .proxy-input:focus, .proxy-select:focus { border-color:#3b82f6; }
+  .proxy-select {
+    background-image:linear-gradient(45deg,transparent 50%,#48566e 50%),linear-gradient(135deg,#48566e 50%,transparent 50%);
+    background-position:calc(100% - 14px) 50%,calc(100% - 9px) 50%;
+    background-size:5px 5px,5px 5px; background-repeat:no-repeat;
+    padding-right:32px;
+  }
+  .proxy-grid {
+    display:grid; grid-template-columns:1fr 90px; gap:8px;
+  }
+  .proxy-paste-hint {
+    font-size:9px; color:var(--muted); margin-top:6px;
+    font-family:'JetBrains Mono',monospace;
+    line-height:1.4;
+  }
+  .proxy-actions {
+    display:grid; gap:8px; margin-top:14px;
+    grid-template-columns:1fr 1fr;
+  }
+  .proxy-actions.with-delete {
+    grid-template-columns:1fr 1fr 1fr;
+  }
+  .proxy-btn {
+    border:none; border-radius:10px; padding:12px 10px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px; font-weight:700; cursor:pointer;
+    letter-spacing:0.3px; transition:opacity 0.15s, transform 0.15s;
+  }
+  .proxy-btn:active { transform:scale(0.98); }
+  .proxy-btn-test {
+    background:var(--dim); color:var(--text);
+    border:1px solid var(--border);
+  }
+  .proxy-btn-save {
+    background:#fff; color:#07090f;
+  }
+  .proxy-btn-delete {
+    background:rgba(255,69,96,0.1); color:#ff4560;
+    border:1px solid rgba(255,69,96,0.25);
+  }
+  .proxy-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .proxy-test-result {
+    margin-top:12px; padding:9px 11px;
+    border-radius:8px; font-size:10px;
+    font-family:'JetBrains Mono',monospace;
+    line-height:1.5; display:none;
+  }
+  .proxy-test-result.show { display:block; }
+  .proxy-test-result.ok {
+    background:rgba(16,217,138,0.1);
+    border:1px solid rgba(16,217,138,0.25);
+    color:#10d98a;
+  }
+  .proxy-test-result.err {
+    background:rgba(255,69,96,0.1);
+    border:1px solid rgba(255,69,96,0.25);
+    color:#ff4560;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width:0; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-logo">
+    <div style="background:#000;border-radius:8px;border:1px solid rgba(255,255,255,0.12);box-shadow:0 0 16px rgba(255,255,255,0.08);width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
+        <defs>
+          <filter id="glow-strong">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="glow-soft">
+            <feGaussianBlur stdDeviation="1.2" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="glow-mid">
+            <feGaussianBlur stdDeviation="1.8" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- LEFT LEG -->
+        <line x1="50" y1="8" x2="10" y2="78" stroke="white" stroke-width="1.8" filter="url(#glow-strong)"/>
+        <!-- RIGHT LEG -->
+        <line x1="50" y1="8" x2="90" y2="78" stroke="white" stroke-width="1.8" filter="url(#glow-strong)"/>
+
+        <!-- ARCH (concave bottom curve) -->
+        <path d="M10,78 Q50,42 90,78" fill="none" stroke="white" stroke-width="1.8" filter="url(#glow-strong)"/>
+
+        <!-- INNER SMALL TRIANGLE top -->
+        <polygon points="50,8 38,32 62,32" fill="none" stroke="white" stroke-width="1.0" filter="url(#glow-soft)" opacity="0.9"/>
+
+        <!-- GRID horizontals inside triangle -->
+        <line x1="36" y1="32" x2="64" y2="32" stroke="white" stroke-width="0.8" filter="url(#glow-soft)" opacity="0.85"/>
+        <line x1="26" y1="52" x2="74" y2="52" stroke="white" stroke-width="0.8" filter="url(#glow-soft)" opacity="0.75"/>
+        <line x1="16" y1="68" x2="84" y2="68" stroke="white" stroke-width="0.7" filter="url(#glow-soft)" opacity="0.6"/>
+
+        <!-- GRID diagonals from apex left side -->
+        <line x1="50" y1="8" x2="28" y2="68" stroke="white" stroke-width="0.6" opacity="0.55"/>
+        <line x1="50" y1="8" x2="38" y2="68" stroke="white" stroke-width="0.6" opacity="0.55"/>
+        <line x1="50" y1="8" x2="20" y2="78" stroke="white" stroke-width="0.6" opacity="0.45"/>
+        <line x1="50" y1="8" x2="32" y2="78" stroke="white" stroke-width="0.6" opacity="0.45"/>
+
+        <!-- GRID diagonals from apex right side -->
+        <line x1="50" y1="8" x2="72" y2="68" stroke="white" stroke-width="0.6" opacity="0.55"/>
+        <line x1="50" y1="8" x2="62" y2="68" stroke="white" stroke-width="0.6" opacity="0.55"/>
+        <line x1="50" y1="8" x2="80" y2="78" stroke="white" stroke-width="0.6" opacity="0.45"/>
+        <line x1="50" y1="8" x2="68" y2="78" stroke="white" stroke-width="0.6" opacity="0.45"/>
+
+        <!-- GLITCH lines left -->
+        <line x1="10" y1="52" x2="20" y2="52" stroke="white" stroke-width="2.5" opacity="0.95" filter="url(#glow-mid)"/>
+        <line x1="8"  y1="54" x2="14" y2="54" stroke="white" stroke-width="1.2" opacity="0.6"/>
+        <!-- GLITCH lines right -->
+        <line x1="80" y1="48" x2="92" y2="48" stroke="white" stroke-width="2.0" opacity="0.85" filter="url(#glow-mid)"/>
+        <line x1="84" y1="50" x2="91" y2="50" stroke="white" stroke-width="1.0" opacity="0.5"/>
+        <!-- GLITCH center top -->
+        <line x1="44" y1="32" x2="50" y2="32" stroke="white" stroke-width="2.2" opacity="0.9" filter="url(#glow-mid)"/>
+        <line x1="46" y1="30" x2="52" y2="30" stroke="white" stroke-width="1.0" opacity="0.5"/>
+
+        <!-- Apex glow dot -->
+        <circle cx="50" cy="8" r="1.5" fill="white" filter="url(#glow-strong)"/>
+      </svg>
+    </div>
+    <div>
+      <div class="header-title" style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:900;letter-spacing:-0.3px;color:#fff;">FX. <span style="color:rgba(255,255,255,0.55)">Social Club</span></div>
+      <div class="header-sub">AI Agent System</div>
+    </div>
+  </div>
+  <div class="header-kpi">
+    <div class="header-kpi-val">$612</div>
+    <div class="header-kpi-sub">↑ 18% · 11 АС · 2 BM</div>
+  </div>
+</div>
+
+<!-- Scroll area -->
+<div class="scroll-area" id="scrollArea">
+  <!-- Pages injected here -->
+</div>
+
+<!-- Bottom nav -->
+<div class="bottom-nav">
+  <button class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+    <span class="nav-icon">⊞</span>
+    <span class="nav-label">Обзор</span>
+  </button>
+  <button class="nav-item" onclick="showPage('agents')" id="nav-agents">
+    <span class="nav-icon">◎</span>
+    <span class="nav-label">Агенты</span>
+  </button>
+  <button class="nav-item" onclick="showPage('tasks')" id="nav-tasks">
+    <span class="nav-icon">≡</span>
+    <span class="nav-label">Задачи</span>
+  </button>
+  <button class="nav-item" onclick="showPage('accounts')" id="nav-accounts">
+    <span class="nav-icon">⬡</span>
+    <span class="nav-label">Кабинеты</span>
+  </button>
+  <button class="nav-item" onclick="showPage('analytics')" id="nav-analytics">
+    <span class="nav-icon">↗</span>
+    <span class="nav-label">Аналитика</span>
+  </button>
+  <button class="nav-item" onclick="showPage('bundles')" id="nav-bundles">
+    <span class="nav-icon">⚡</span>
+    <span class="nav-label">Связки</span>
+  </button>
+</div>
+
+<!-- Chat Modal -->
+<div class="chat-overlay" id="chatOverlay" style="display:none">
+  <div style="flex:1" onclick="closeChat()"></div>
+  <div class="chat-modal">
+    <div class="chat-handle"></div>
+    <div class="chat-header" id="chatHeader"></div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="chatInput" placeholder="Задача для агента..." rows="1"
+        oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+      <button class="chat-send" id="chatSend" onclick="sendMessage()">→</button>
+    </div>
+  </div>
+</div>
+
+<!-- Proxy Modal -->
+<div class="proxy-modal-overlay" id="proxyOverlay">
+  <div style="flex:1" onclick="closeProxyModal()"></div>
+  <div class="proxy-modal">
+    <div class="proxy-modal-handle"></div>
+    <h3 id="proxyModalTitle">Прокси</h3>
+    <div class="proxy-modal-sub" id="proxyModalSub">для выбранного аккаунта</div>
+
+    <div class="proxy-form-row">
+      <label>Тип</label>
+      <select class="proxy-select" id="proxyType">
+        <option value="HTTP">HTTP</option>
+        <option value="HTTPS">HTTPS</option>
+        <option value="SOCKS5">SOCKS5</option>
+        <option value="SOCKS4">SOCKS4</option>
+      </select>
+    </div>
+
+    <div class="proxy-form-row">
+      <label>Host : Port</label>
+      <div class="proxy-grid">
+        <input class="proxy-input" id="proxyHost" type="text" placeholder="123.45.67.89" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+        <input class="proxy-input" id="proxyPort" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="8080" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="proxy-form-row">
+      <label>Login (опционально)</label>
+      <input class="proxy-input" id="proxyLogin" type="text" placeholder="username" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+    </div>
+
+    <div class="proxy-form-row">
+      <label>Password (опционально)</label>
+      <input class="proxy-input" id="proxyPass" type="password" placeholder="••••••••" autocomplete="off" />
+    </div>
+
+    <div class="proxy-form-row">
+      <label>Или вставь строку</label>
+      <input class="proxy-input" id="proxyParse" type="text" placeholder="user:pass@host:port  /  host:port:user:pass" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="parseProxyString(this.value)" />
+      <div class="proxy-paste-hint">поддерживается: host:port · host:port:user:pass · user:pass@host:port · http://user:pass@host:port</div>
+    </div>
+
+    <div class="proxy-test-result" id="proxyTestResult"></div>
+
+    <div class="proxy-actions" id="proxyActions">
+      <button class="proxy-btn proxy-btn-test" onclick="testProxy()">TEST</button>
+      <button class="proxy-btn proxy-btn-save" onclick="saveProxy()">SAVE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Telegram WebApp init ──────────────────────────────────────────────────────
+const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    tg.setHeaderColor('#07090f');
+    tg.setBackgroundColor('#07090f');
+  }
+
+// ── Data ─────────────────────────────────────────────────────────────────────
+const AGENTS = [
+  { id:'atlas',    name:'Atlas',    role:'HEAD · Координатор',   model:'claude-opus-4-6',   icon:'🏛️', color:'#e8622a',
+    system:`Ты Atlas — главный оркестратор AI-системы для FB медиабаинга крипто-офферов. Команда: Maverick (байер), Spy (разведчик), Prism (креатив), Forge (лендинги). Контекст: 2 BM, 11 активных РК, ниша крипто. Отвечай чётко и по делу.` },
+  { id:'maverick', name:'Maverick', role:'BUYER · Медиабайер',   model:'claude-sonnet-4-6', icon:'🎯', color:'#3b82f6',
+    system:`Ты Maverick — AI медиабайер FB крипто. 2 BM, 11 РК. KPI: ROAS>4x, CPL<60₽, FTD CR>25%. Давай конкретные действия по кампаниям.` },
+  { id:'spy',      name:'Spy',      role:'INTEL · Разведчик',    model:'claude-opus-4-6',   icon:'🕵️', color:'#a78bfa',
+    system:`Ты Spy — агент разведки крипто-рекламы. Анализируешь FB Ad Library, тренды, конкурентов. Находишь рабочие связки. Давай конкретные инсайты.` },
+  { id:'prism',    name:'Prism',    role:'CREATIVE · Дизайн',    model:'claude-opus-4-6',   icon:'🎨', color:'#f5b800',
+    system:`Ты Prism — AI креатор крипто-рекламы FB. Генерируешь идеи видео, хуки, скрипты, тексты. Знаешь что работает: FOMO, соцдок, авторитет, срочность.` },
+  { id:'forge',    name:'Forge',    role:'LANDING · Лендинги',   model:'claude-sonnet-4-6', icon:'⚒️', color:'#10d98a',
+    system:`Ты Forge — агент лендингов крипто. Пишешь конвертирующий копирайт. Структура: хук→боль→решение→доказательство→оффер→CTA.` },
+];
+
+const BMS = [
+  { id:'BM_001', name:'BM Основной', accs:[
+    {id:'act_111',name:'AC-Crypto-01',status:'active',roas:4.8,cpl:0.55},
+    {id:'act_222',name:'AC-Crypto-02',status:'active',roas:5.2,cpl:0.49},
+    {id:'act_333',name:'AC-Crypto-03',status:'active',roas:3.7,cpl:0.74},
+    {id:'act_444',name:'AC-Crypto-04',status:'banned', roas:0,  cpl:0},
+    {id:'act_555',name:'AC-Crypto-05',status:'active',roas:4.1,cpl:0.65},
+    {id:'act_666',name:'AC-Crypto-06',status:'active',roas:4.6,cpl:0.58},
+  ]},
+  { id:'BM_002', name:'BM Новый', accs:[
+    {id:'act_777',name:'AC-Crypto-07',status:'active',roas:5.1,cpl:0.52},
+    {id:'act_888',name:'AC-Crypto-08',status:'active',roas:3.9,cpl:0.68},
+    {id:'act_999',name:'AC-Crypto-09',status:'active',roas:4.4,cpl:0.61},
+    {id:'act_aaa',name:'AC-Crypto-10',status:'active',roas:4.7,cpl:0.56},
+    {id:'act_bbb',name:'AC-Crypto-11',status:'active',roas:5.3,cpl:0.48},
+  ]},
+];
+
+const TASKS = [
+  {id:1,text:'Запустить связку на BM_002',agent:'maverick',done:false,priority:'high'},
+  {id:2,text:'Спай топ-креативов конкурентов',agent:'spy',done:true,priority:'medium'},
+  {id:3,text:'10 концепций видео для Reels',agent:'prism',done:false,priority:'high'},
+  {id:4,text:'Авто-правила на все 11 РК',agent:'maverick',done:false,priority:'high'},
+  {id:5,text:'Лендинг под новый оффер',agent:'forge',done:false,priority:'medium'},
+  {id:6,text:'Анализ плейсментов 14 дней',agent:'atlas',done:true,priority:'low'},
+];
+
+const LOGS = [
+  {time:'09:41',agent:'Maverick',color:'#3b82f6',msg:'Пауза act_444 — бан, исключён из ротации'},
+  {time:'09:38',agent:'Spy',color:'#a78bfa',msg:'Найдено 3 новых рабочих связки'},
+  {time:'09:31',agent:'Atlas',color:'#e8622a',msg:'Задачи распределены: Prism→10 крео, Maverick→масштаб'},
+  {time:'09:22',agent:'Maverick',color:'#3b82f6',msg:'Масштаб +20% на act_222, act_777 — ROAS >5x'},
+  {time:'09:15',agent:'Forge',color:'#10d98a',msg:'Лендинг v3 готов, CR тест запущен'},
+];
+
+const QUICK_ACTIONS = [
+  {icon:'🚀',label:'Launch campaign',sub:'All active accounts',agent:'maverick',prompt:'Launch crypto campaign on all active accounts, budget $50/day, men 25-44, USA/EU'},
+  {icon:'📊',label:'Analyze campaigns',sub:'Metrics for 7 days',agent:'atlas',prompt:'Analyze all campaigns for 7 days. What to scale, what to pause? Show in USD.'},
+  {icon:'🕵️',label:'Spy competitors',sub:'Top creatives now',agent:'spy',prompt:'What is working now for competitors in crypto niche on FB? Top formats and hooks.'},
+  {icon:'🎨',label:'Creative ideas',sub:'10 Reels concepts',agent:'prism',prompt:'Give 10 specific video creative concepts for FB Reels for crypto offer. With hooks.'},
+];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let currentPage = 'dashboard';
+let chatAgent = null;
+let chatHistory = [];
+let isLoading = false;
+let tasksDone = new Set(TASKS.filter(t=>t.done).map(t=>t.id));
+let activeGeo = 'ALL';
+
+// ── Proxies (per account) ────────────────────────────────────────────────────
+const PROXY_KEY = 'fxsc_proxies_v1';
+let proxies = {};
+try {
+  proxies = JSON.parse(localStorage.getItem(PROXY_KEY) || '{}') || {};
+} catch (_) { proxies = {}; }
+let editingAccId = null;
+
+function saveProxies() {
+  try { localStorage.setItem(PROXY_KEY, JSON.stringify(proxies)); } catch (_) {}
+}
+
+// ── GEO Data ──────────────────────────────────────────────────────────────────
+const GEO_DATA = {
+  ALL: { label:'All GEO', flag:'🌍', spend:5630, roas:4.4, cpl:0.57, ctr:2.9, cr:24.8, cpm:98,  roi:285, ftd:289, tier:'all' },
+  US:  { label:'United States', flag:'🇺🇸', spend:1840, roas:4.8, cpl:0.52, ctr:3.2, cr:28.4, cpm:112, roi:340, ftd:89,  tier:1, kpi:{roas:4.5,cpl:0.60,ctr:2.5,cr:25} },
+  UK:  { label:'United Kingdom', flag:'🇬🇧', spend:920,  roas:4.2, cpl:0.61, ctr:2.8, cr:24.1, cpm:98,  roi:290, ftd:44,  tier:1, kpi:{roas:4.0,cpl:0.70,ctr:2.0,cr:22} },
+  AU:  { label:'Australia',      flag:'🇦🇺', spend:640,  roas:5.1, cpl:0.48, ctr:3.6, cr:31.2, cpm:87,  roi:410, ftd:38,  tier:1, kpi:{roas:4.0,cpl:0.65,ctr:2.5,cr:25} },
+  CA:  { label:'Canada',         flag:'🇨🇦', spend:480,  roas:3.9, cpl:0.71, ctr:2.4, cr:21.3, cpm:104, roi:230, ftd:27,  tier:1, kpi:{roas:4.0,cpl:0.70,ctr:2.0,cr:20} },
+  DE:  { label:'Germany',        flag:'🇩🇪', spend:520,  roas:3.7, cpl:0.74, ctr:2.1, cr:19.8, cpm:121, roi:195, ftd:31,  tier:2, kpi:{roas:3.5,cpl:0.80,ctr:1.8,cr:18} },
+  FR:  { label:'France',         flag:'🇫🇷', spend:410,  roas:3.4, cpl:0.81, ctr:1.9, cr:17.2, cpm:115, roi:165, ftd:22,  tier:2, kpi:{roas:3.5,cpl:0.85,ctr:1.8,cr:17} },
+  IT:  { label:'Italy',          flag:'🇮🇹', spend:380,  roas:4.1, cpl:0.63, ctr:2.6, cr:23.4, cpm:94,  roi:270, ftd:28,  tier:2, kpi:{roas:3.5,cpl:0.80,ctr:2.0,cr:20} },
+  ES:  { label:'Spain',          flag:'🇪🇸', spend:440,  roas:3.8, cpl:0.69, ctr:2.3, cr:20.9, cpm:102, roi:215, ftd:10,  tier:2, kpi:{roas:3.5,cpl:0.80,ctr:1.8,cr:18} },
+};
+
+const GEO_KEYS = ['US','UK','AU','CA','DE','FR','IT','ES'];
+
+function geoColor(val, target, lower=true) {
+  if (!target) return 'var(--text)';
+  const ok = lower ? val <= target : val >= target;
+  const warn = lower ? val <= target*1.2 : val >= target*0.85;
+  return ok ? '#10d98a' : warn ? '#f5b800' : '#ff4560';
+}
+
+// ── Pages ─────────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const g = GEO_DATA[activeGeo];
+  const isAll = activeGeo === 'ALL';
+  const kpi = g.kpi || {roas:4.0,cpl:0.65,ctr:2.0,cr:20};
+
+  return `
+    <!-- GEO Filter -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none">
+        ${['ALL',...GEO_KEYS].map(geo=>{
+          const gd = GEO_DATA[geo];
+          const isActive = activeGeo===geo;
+          return `<button onclick="setGeo('${geo}')" style="flex-shrink:0;background:${isActive?'#fff':'var(--card)'};color:${isActive?'#07090f':'var(--muted)'};border:1px solid ${isActive?'#fff':'var(--border)'};border-radius:20px;padding:6px 12px;font-size:11px;font-weight:${isActive?'800':'500'};cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:all 0.15s">
+            <span>${gd.flag}</span>
+            <span>${geo==='ALL'?'All GEO':geo}</span>
+          </button>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- GEO header -->
+    <div style="background:var(--card);border:1px solid ${isAll?'var(--border)':'#ffffff22'};border-radius:13px;padding:13px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:28px">${g.flag}</span>
+        <div>
+          <div style="font-weight:700;font-size:14px;color:var(--text)">${g.label}</div>
+          <div style="color:var(--muted);font-size:10px;margin-top:1px">${isAll?'Все активные GEO':'Tier '+g.tier+' · KPI цели установлены'}</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:18px;font-weight:800;color:var(--text)">$${g.spend.toLocaleString()}</div>
+        <div style="color:#10d98a;font-size:10px">↑ расход</div>
+      </div>
+    </div>
+
+    <!-- KPI cards с GEO-специфичными целями -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      ${[
+        {l:'ROAS',    v:g.roas+'x',    raw:g.roas,  target:kpi.roas, lower:false, sub:`цель >${kpi.roas}x`},
+        {l:'CPL',     v:'$'+g.cpl,     raw:g.cpl,   target:kpi.cpl,  lower:true,  sub:`цель <$${kpi.cpl}`},
+        {l:'CTR',     v:g.ctr+'%',     raw:g.ctr,   target:kpi.ctr,  lower:false, sub:`цель >${kpi.ctr}%`},
+        {l:'CR',      v:g.cr+'%',      raw:g.cr,    target:kpi.cr,   lower:false, sub:`цель >${kpi.cr}%`},
+        {l:'CPM',     v:'$'+g.cpm,     raw:g.cpm,   target:null,     lower:true,  sub:'1000 показов'},
+        {l:'ROI',     v:g.roi+'%',     raw:g.roi,   target:150,      lower:false, sub:'цель >150%'},
+        {l:'FTD',     v:g.ftd,         raw:g.ftd,   target:null,     lower:false, sub:'депозитов'},
+        {l:'Spend',   v:'$'+g.spend,   raw:g.spend, target:null,     lower:false, sub:'расход'},
+      ].map(k=>`
+        <div class="kpi-card" style="border-color:${k.target?geoColor(k.raw,k.target,k.lower)+'44':'var(--border)'}">
+          <div class="kpi-label">${k.l}</div>
+          <div class="kpi-value" style="color:${k.target?geoColor(k.raw,k.target,k.lower):'var(--text)'}">${k.v}</div>
+          <div class="kpi-sub">${k.sub}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- GEO breakdown (только для All) -->
+    ${isAll ? `
+      <div class="sec-title"><span class="sec-title-dot"></span>GEO срез</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:14px">
+        <div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr 1fr;gap:0;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surf)">
+          ${['GEO','Spend','ROAS','CPL','ROI'].map(h=>`<div style="color:var(--muted);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">${h}</div>`).join('')}
+        </div>
+        ${GEO_KEYS.map(geo=>{
+          const gd = GEO_DATA[geo];
+          const kp = gd.kpi||{roas:4,cpl:0.65};
+          return `
+            <div onclick="setGeo('${geo}')" style="display:grid;grid-template-columns:auto 1fr 1fr 1fr 1fr;gap:0;padding:9px 12px;border-bottom:1px solid #1c253822;cursor:pointer;transition:background 0.1s"
+              onmouseenter="this.style.background='var(--card2)'" onmouseleave="this.style.background='transparent'">
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="font-size:14px">${gd.flag}</span>
+                <span style="color:var(--text);font-size:11px;font-weight:600">${geo}</span>
+              </div>
+              <div style="color:var(--muted);font-size:11px;font-family:monospace">$${gd.spend}</div>
+              <div style="font-weight:700;font-size:11px;color:${geoColor(gd.roas,kp.roas,false)}">${gd.roas}x</div>
+              <div style="font-size:11px;color:${geoColor(gd.cpl,kp.cpl,true)}">$${gd.cpl}</div>
+              <div style="font-size:11px;font-weight:700;color:${gd.roi>200?'#10d98a':gd.roi>150?'#f5b800':'#ff4560'}">${gd.roi}%</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    ` : `
+      <!-- Scale recommendations для конкретного GEO -->
+      <div class="sec-title"><span class="sec-title-dot"></span>Рекомендации</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:13px;padding:14px;margin-bottom:14px">
+        ${g.roas >= (kpi.roas||4) ? `
+          <div style="background:#10d98a12;border:1px solid #10d98a33;border-radius:9px;padding:10px 12px;margin-bottom:8px">
+            <div style="color:#10d98a;font-weight:700;font-size:12px">🚀 Масштабировать</div>
+            <div style="color:var(--text);font-size:11px;margin-top:4px">ROAS ${g.roas}x — выше цели ${kpi.roas}x. Увеличь бюджет на 20-30%</div>
+          </div>` : `
+          <div style="background:#ff456012;border:1px solid #ff456033;border-radius:9px;padding:10px 12px;margin-bottom:8px">
+            <div style="color:#ff4560;font-weight:700;font-size:12px">⚠️ Докрутить</div>
+            <div style="color:var(--text);font-size:11px;margin-top:4px">ROAS ${g.roas}x — ниже цели ${kpi.roas}x. Меняй крео или аудиторию</div>
+          </div>`}
+        ${g.cpl <= (kpi.cpl||0.65) ? `
+          <div style="background:#10d98a12;border:1px solid #10d98a33;border-radius:9px;padding:10px 12px">
+            <div style="color:#10d98a;font-weight:700;font-size:12px">✅ CPL в норме</div>
+            <div style="color:var(--text);font-size:11px;margin-top:4px">$${g.cpl} — ниже цели $${kpi.cpl}. Связка рентабельна</div>
+          </div>` : `
+          <div style="background:#f5b80012;border:1px solid #f5b80033;border-radius:9px;padding:10px 12px">
+            <div style="color:#f5b800;font-weight:700;font-size:12px">📌 CPL высокий</div>
+            <div style="color:var(--text);font-size:11px;margin-top:4px">$${g.cpl} — выше цели $${kpi.cpl}. Оптимизируй лендинг</div>
+          </div>`}
+      </div>
+    `}
+
+    <div class="sec-title"><span class="sec-title-dot"></span>Быстрые действия</div>
+    <div class="quick-grid">
+      ${QUICK_ACTIONS.map(q=>`
+        <div class="quick-btn" onclick="openChatWithPrompt('${q.agent}','${q.prompt}')">
+          <div class="quick-icon">${q.icon}</div>
+          <div class="quick-label">${q.label}</div>
+          <div class="quick-sub">${q.sub}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="sec-title"><span class="sec-title-dot"></span>Агенты</div>
+    ${AGENTS.map(a=>`
+      <div class="agent-card" onclick="openChat('${a.id}')">
+        <div class="agent-avatar" style="background:${a.color}22">${a.icon}</div>
+        <div>
+          <div class="agent-name">${a.name}</div>
+          <div class="agent-role">${a.role}</div>
+          <span class="agent-model">${a.model}</span>
+        </div>
+        <div class="agent-dot online"></div>
+      </div>
+    `).join('')}
+
+    <div class="sec-title"><span class="sec-title-dot"></span>Задачи сегодня
+      <span style="margin-left:auto;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0">
+        ${tasksDone.size}/${TASKS.length}
+      </span>
+    </div>
+    ${TASKS.slice(0,4).map(t=>renderTaskItem(t)).join('')}
+  `;
+}
+
+function setGeo(geo) {
+  activeGeo = geo;
+  if(tg) tg.HapticFeedback?.selectionChanged?.();
+  showPage('dashboard');
+}
+
+function renderAgentsPage() {
+  return `
+    <div class="sec-title"><span class="sec-title-dot"></span>Команда агентов</div>
+    ${AGENTS.map(a=>`
+      <div class="agent-card" onclick="openChat('${a.id}')" style="flex-direction:column;align-items:flex-start;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px;width:100%">
+          <div class="agent-avatar" style="background:${a.color}22">${a.icon}</div>
+          <div style="flex:1">
+            <div class="agent-name">${a.name}</div>
+            <div class="agent-role">${a.role}</div>
+          </div>
+          <div class="agent-dot online"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="agent-model">${a.model}</span>
+          <span class="badge" style="background:#10d98a18;color:#10d98a">● Онлайн</span>
+        </div>
+        <div style="color:var(--muted);font-size:10px;line-height:1.5;border-top:1px solid var(--border);padding-top:8px;width:100%">
+          ${a.system.slice(0,80)}...
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderTaskItem(t) {
+  const done = tasksDone.has(t.id);
+  const ag = AGENTS.find(a=>a.id===t.agent);
+  const pColor = t.priority==='high'?'#ff4560':t.priority==='medium'?'#f5b800':'#48566e';
+  return `
+    <div class="task-item">
+      <div class="task-check ${done?'done':''}" onclick="toggleTask(${t.id})">
+        ${done?'<span style="color:#fff;font-size:11px">✓</span>':''}
+      </div>
+      <div style="flex:1">
+        <div class="task-text ${done?'done':''}">${t.text}</div>
+        <div class="task-badges">
+          ${ag?`<span class="badge" style="background:${ag.color}18;color:${ag.color}">${ag.icon} ${ag.name}</span>`:''}
+          <span class="badge" style="background:${pColor}18;color:${pColor}">
+            ${t.priority==='high'?'🔴 Срочно':t.priority==='medium'?'🟡 Средний':'⚪ Низкий'}
+          </span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderTasksPage() {
+  return `
+    <div class="sec-title"><span class="sec-title-dot"></span>Все задачи
+      <span style="margin-left:auto;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0">
+        ${tasksDone.size}/${TASKS.length} выполнено
+      </span>
+    </div>
+    <div id="tasksList">
+      ${TASKS.map(t=>renderTaskItem(t)).join('')}
+    </div>
+  `;
+}
+
+function renderAccountsPage() {
+  const totalAcc = BMS.reduce((n,bm)=>n+bm.accs.length, 0);
+  const withProxy = BMS.reduce((n,bm)=>n + bm.accs.filter(a=>proxies[a.id]).length, 0);
+
+  return `
+    <div class="sec-title">
+      <span class="sec-title-dot"></span>Прокси
+      <span style="margin-left:auto;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0">
+        ${withProxy}/${totalAcc} подключено
+      </span>
+    </div>
+    <div class="kpi-card" style="margin-bottom:14px;padding:11px 13px;display:flex;gap:8px;align-items:center;font-size:10px;color:var(--muted);line-height:1.45">
+      <span style="font-size:13px">🌐</span>
+      <span>К каждому кабинету подключи свой прокси — антидетект, защита от связки аккаунтов и баны минимизированы. Тапни по строке прокси под аккаунтом.</span>
+    </div>
+  ` + BMS.map(bm => {
+    const active = bm.accs.filter(a=>a.status==='active').length;
+    return `
+      <div class="bm-header">
+        <span style="font-size:14px">⬡</span>
+        <div>
+          <div class="bm-name">${bm.name}</div>
+          <div class="bm-id">${bm.id}</div>
+        </div>
+        <span class="badge" style="margin-left:auto;background:#10d98a18;color:#10d98a">${active} активных</span>
+      </div>
+      <div class="acc-table">
+        ${bm.accs.map(a=>{
+          const roasColor = a.roas>=5?'#10d98a':a.roas>=4?'#f5b800':a.roas===0?'#48566e':'#ff4560';
+          const cplColor  = a.cpl<0.55?'#10d98a':a.cpl<0.70?'#f5b800':a.cpl===0?'#48566e':'#ff4560';
+          return `
+            <div class="acc-row">
+              <div>
+                <div class="acc-name">${a.name}</div>
+                <div style="font-size:9px;color:var(--muted);margin-top:1px">
+                  <span class="status-dot" style="background:${a.status==='active'?'#10d98a':'#ff4560'}"></span>
+                  ${a.status==='active'?'Активен':'Бан'}
+                </div>
+              </div>
+              <div class="acc-roas" style="color:${roasColor}">${a.roas?a.roas+'x':'—'}</div>
+              <div class="acc-cpl" style="color:${cplColor}">${a.cpl?'$'+a.cpl:'—'}</div>
+              ${renderProxyLine(a.id)}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderProxyLine(accId) {
+  const p = proxies[accId];
+  if (!p) {
+    return `
+      <div class="proxy-line empty" onclick="openProxyModal('${accId}')">
+        <span class="pl-icon">＋</span>
+        <span class="pl-host">Подключить прокси</span>
+        <span class="pl-edit">→</span>
+      </div>
+    `;
+  }
+  const statusColor = p.status==='ok' ? '#10d98a'
+                    : p.status==='err' ? '#ff4560'
+                    : '#f5b800';
+  return `
+    <div class="proxy-line" onclick="openProxyModal('${accId}')">
+      <span class="pl-status" style="background:${statusColor}"></span>
+      <span class="pl-host">${escapeHtml(p.host)}:${escapeHtml(String(p.port))}</span>
+      <span class="pl-type">${p.type||'HTTP'}</span>
+      <span class="pl-edit">⚙</span>
+    </div>
+  `;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderAnalyticsPage() {
+  const days = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  const spends = [420,520,440,670,580,810,550];
+  const roases = [3.8,4.2,3.9,5.1,4.7,5.4,4.9];
+  const maxS = Math.max(...spends);
+  const maxR = Math.max(...roases);
+
+  return `
+    <div class="sec-title"><span class="sec-title-dot"></span>Spend by day ($)</div>
+    <div class="kpi-card" style="margin-bottom:12px">
+      <div class="bar-wrap">
+        ${spends.map((s,i)=>`
+          <div class="bar-col">
+            <div class="bar" style="height:${(s/maxS)*54}px;background:${i===5?'#e8622a':'#e8622a44'}"></div>
+            <div class="bar-label">${days[i]}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="sec-title"><span class="sec-title-dot"></span>ROAS по дням</div>
+    <div class="kpi-card" style="margin-bottom:12px">
+      <div class="bar-wrap">
+        ${roases.map((r,i)=>`
+          <div class="bar-col">
+            <div class="bar" style="height:${(r/maxR)*54}px;background:${r>=5?'#10d98a':r>=4?'#10d98a88':'#f5b800'}"></div>
+            <div class="bar-label">${days[i]}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="sec-title"><span class="sec-title-dot"></span>Лог агентов</div>
+    <div class="kpi-card">
+      ${LOGS.map(l=>`
+        <div class="log-item">
+          <div class="log-time">${l.time}</div>
+          <div class="log-agent" style="color:${l.color}">${l.agent}</div>
+          <div class="log-msg">${l.msg}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+// ── Navigation ────────────────────────────────────────────────────────────────
+// ── Bundles Data ──────────────────────────────────────────────────────────────
+const BUNDLES = [
+  {
+    id:1, name:'Crypto FOMO v1', status:'active', vertical:'Крипта',
+    structure:'1-10-1 ABO',
+    campaigns:1, adsets:10, ads:1,
+    budget_day:100, spend:1840, revenue:8648,
+    ctr:3.2, cr:28.4, cpm:91, cpl:0.52, cpc:0.29,
+    roi:370, roas:4.7, ftd:89, ftd_cr:31, frequency:2.1,
+    quality:'top', geo:'US,UK,AU', age:'25-44', gender:'М',
+    placement:'Reels,Feed', days:14,
+    creative:'Video_Chart_BTC', preland:'Блог трейдера', land:'Лендинг v3',
+    notes:'Лучшая связка. CTR 3.2% стабильно 14 дней. Масштабировать.',
+  },
+  {
+    id:2, name:'Crypto Social Proof v2', status:'active', vertical:'Крипта',
+    structure:'1-10-1 ABO',
+    campaigns:1, adsets:10, ads:1,
+    budget_day:140, spend:980, revenue:3920,
+    ctr:2.8, cr:24.1, cpm:108, cpl:0.61, cpc:0.39,
+    roi:300, roas:4.0, ftd:44, ftd_cr:27, frequency:1.8,
+    quality:'good', geo:'US,CA', age:'30-49', gender:'М',
+    placement:'Feed,Stories', days:7,
+    creative:'Video_Testimonial', preland:'Отзывы', land:'Лендинг v2',
+    notes:'Стабильная. CR чуть ниже v1. Держать.',
+  },
+  {
+    id:3, name:'Crypto Fear Miss Out', status:'paused', vertical:'Крипта',
+    structure:'1-10-1 ABO',
+    campaigns:1, adsets:10, ads:1,
+    budget_day:124, spend:620, revenue:992,
+    ctr:1.4, cr:12.3, cpm:134, cpl:0.91, cpc:0.96,
+    roi:60, roas:1.6, ftd:8, ftd_cr:10, frequency:3.4,
+    quality:'bad', geo:'US', age:'18-34', gender:'М+Ж',
+    placement:'Feed', days:5,
+    creative:'Image_FOMO', preland:'Нет', land:'Лендинг v1',
+    notes:'Пауза. CTR упал до 1.4%. Frequency 3.4 — выгорание.',
+  },
+  {
+    id:4, name:'Crypto Tutorial NEW', status:'testing', vertical:'Крипта',
+    structure:'1-10-1 ABO',
+    campaigns:1, adsets:10, ads:1,
+    budget_day:105, spend:210, revenue:714,
+    ctr:4.1, cr:33.2, cpm:78, cpl:0.42, cpc:0.19,
+    roi:240, roas:3.4, ftd:11, ftd_cr:35, frequency:1.2,
+    quality:'top', geo:'UK,AU', age:'25-44', gender:'М',
+    placement:'Reels', days:2,
+    creative:'Video_Tutorial_03', preland:'Гайд новичка', land:'Лендинг v3',
+    notes:'🔥 Тест 2 дня. CTR 4.1% — лучший. CPL $0.42. Масштабировать!',
+  },
+];
+
+const BSTATUS = {
+  active:  {label:'Активна',  bg:'#10d98a18',color:'#10d98a'},
+  paused:  {label:'Пауза',    bg:'#f5b80018',color:'#f5b800'},
+  testing: {label:'Тест',     bg:'#3b82f618',color:'#3b82f6'},
+  stopped: {label:'Стоп',     bg:'#ff456018',color:'#ff4560'},
+};
+const BQUALITY = {
+  top:  {label:'ТОП 🔥',bg:'#10d98a18',color:'#10d98a'},
+  good: {label:'Хорошо', bg:'#3b82f618',color:'#3b82f6'},
+  bad:  {label:'Слабая', bg:'#ff456018',color:'#ff4560'},
+};
+
+let activeBundle = null;
+let bundleView = 'list'; // 'list' | 'create' | 'detail'
+
+function renderBundlesPage() {
+  const active = BUNDLES.filter(b=>b.status==='active');
+  const avgCTR = (BUNDLES.reduce((s,b)=>s+b.ctr,0)/BUNDLES.length).toFixed(1);
+  const avgCR  = (BUNDLES.reduce((s,b)=>s+b.cr,0)/BUNDLES.length).toFixed(1);
+  const avgCPL = (BUNDLES.reduce((s,b)=>s+b.cpl,0)/BUNDLES.length).toFixed(2);
+  const avgROAS= (BUNDLES.reduce((s,b)=>s+b.roas,0)/BUNDLES.length).toFixed(1);
+
+  return `
+    <!-- Top bar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="color:var(--text);font-weight:800;font-size:16px;letter-spacing:-0.3px">⚡ Связки</div>
+        <div style="color:var(--muted);font-size:10px;margin-top:1px">${active.length} активных · ${BUNDLES.length} всего · 1-10-1 ABO</div>
+      </div>
+      <button onclick="showCreateBundle()" style="background:#fff;color:#07090f;border:none;border-radius:10px;padding:9px 16px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:-0.3px">+ Создать</button>
+    </div>
+
+    <!-- KPI row из книги -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px">
+      ${[
+        {l:'CTR',  v:avgCTR+'%', ok:parseFloat(avgCTR)>=2,  target:'>2%'},
+        {l:'CR',   v:avgCR+'%',  ok:parseFloat(avgCR)>=20,  target:'>20%'},
+        {l:'CPL',  v:'$'+avgCPL,ok:parseFloat(avgCPL)<=0.65,target:'<$0.65'},
+        {l:'ROAS', v:avgROAS+'x',ok:parseFloat(avgROAS)>=4, target:'>4x'},
+      ].map(k=>`
+        <div style="background:var(--card);border:1px solid ${k.ok?'#10d98a33':'#ff456033'};border-radius:10px;padding:9px 10px;text-align:center">
+          <div style="color:var(--muted);font-size:8px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">${k.l}</div>
+          <div style="font-size:15px;font-weight:800;color:${k.ok?'#10d98a':'#ff4560'}">${k.v}</div>
+          <div style="color:var(--muted);font-size:8px;margin-top:2px">${k.target}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- Section: Текущие связки -->
+    <div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+      <span style="width:5px;height:5px;border-radius:50%;background:#fff;display:inline-block"></span>Текущие связки
+    </div>
+    ${BUNDLES.map(b=>{
+      const st = BSTATUS[b.status];
+      const qt = BQUALITY[b.quality];
+      const roasC = b.roas>=4?'#10d98a':b.roas>=2.5?'#f5b800':'#ff4560';
+      const ctrC  = b.ctr>=2?'#10d98a':b.ctr>=1?'#f5b800':'#ff4560';
+      const cplC  = b.cpl<=0.65?'#10d98a':b.cpl<=0.85?'#f5b800':'#ff4560';
+      const crC   = b.cr>=20?'#10d98a':b.cr>=12?'#f5b800':'#ff4560';
+      const cpmC  = b.cpm<=100?'#10d98a':b.cpm<=150?'#f5b800':'#ff4560';
+      return `
+        <div onclick="openBundleDetail(${b.id})" style="background:var(--card);border:1px solid ${b.status==='testing'?'#3b82f644':b.status==='active'?'#10d98a22':'var(--border)'};border-radius:13px;padding:14px;margin-bottom:8px;cursor:pointer;active:opacity:0.8">
+
+          <!-- Row 1: name + badges -->
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+            <div>
+              <div style="font-weight:700;font-size:13px;color:var(--text)">${b.name}</div>
+              <div style="color:var(--muted);font-size:9px;margin-top:2px">${b.vertical} · ${b.geo} · ${b.age} · ${b.days}д</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              <span style="padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;background:${st.bg};color:${st.color}">${st.label}</span>
+              <span style="padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;background:${qt.bg};color:${qt.color}">${qt.label}</span>
+            </div>
+          </div>
+
+          <!-- Структура 1-10-1 ABO -->
+          <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center">
+            <span style="background:#ffffff11;color:var(--text);font-size:9px;padding:3px 8px;border-radius:6px;font-weight:700;border:1px solid #ffffff22">📐 ${b.structure}</span>
+            <span style="color:var(--muted);font-size:9px">1 кампания · 10 адсетов · 1 объявление</span>
+          </div>
+
+          <!-- Main KPIs -->
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:8px">
+            ${[
+              {l:'CTR',         v:b.ctr+'%',       c:ctrC},
+              {l:'CR',          v:b.cr+'%',        c:crC},
+              {l:'CPM',         v:'$'+b.cpm,       c:cpmC},
+              {l:'CPL',         v:'$'+b.cpl,       c:cplC},
+              {l:'Budget/day',  v:'$'+b.budget_day,c:'var(--text)'},
+            ].map(m=>`
+              <div style="background:var(--surf);border-radius:7px;padding:6px 5px;text-align:center">
+                <div style="color:var(--muted);font-size:7px;text-transform:uppercase;letter-spacing:0.3px">${m.l}</div>
+                <div style="color:${m.c};font-weight:800;font-size:11px;margin-top:2px">${m.v}</div>
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- Secondary: ROAS ROI Spend -->
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="font-size:11px;color:${roasC};font-weight:800">ROAS ${b.roas}x</span>
+            <span style="color:var(--muted);font-size:9px">·</span>
+            <span style="font-size:11px;color:var(--muted)">ROI <span style="color:${b.roi>200?'#10d98a':b.roi>100?'#f5b800':'#ff4560'};font-weight:700">${b.roi}%</span></span>
+            <span style="color:var(--muted);font-size:9px">·</span>
+            <span style="font-size:11px;color:var(--muted)">Spend <span style="color:var(--text)">$${b.spend}</span></span>
+            <span style="margin-left:auto;color:var(--muted);font-size:11px">→</span>
+          </div>
+
+          ${b.frequency>3?`<div style="margin-top:8px;background:#ff456012;border:1px solid #ff456033;border-radius:7px;padding:5px 9px;color:#ff4560;font-size:9px">⚠️ Frequency ${b.frequency} — выгорание крео</div>`:''}
+          ${b.status==='testing'?`<div style="margin-top:8px;background:#3b82f612;border:1px solid #3b82f633;border-radius:7px;padding:5px 9px;color:#3b82f6;font-size:9px">🧪 ${b.notes}</div>`:''}
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
+function openBundleDetail(id) {
+  activeBundle = BUNDLES.find(b=>b.id===id);
+  const b = activeBundle;
+  const st = BSTATUS[b.status];
+  chatAgent = AGENTS.find(a=>a.id==='maverick');
+  chatHistory = [];
+
+  document.getElementById('chatOverlay').style.display = 'flex';
+  document.getElementById('chatHeader').innerHTML = `
+    <div style="width:38px;height:38px;border-radius:11px;background:#ffffff11;border:1px solid #ffffff22;display:flex;align-items:center;justify-content:center;font-size:18px">⚡</div>
+    <div style="flex:1">
+      <div style="font-weight:700;font-size:13px">${b.name}</div>
+      <div style="color:var(--muted);font-size:9px">${b.structure} · <span style="color:${st.color}">${st.label}</span> · ${b.days} дней</div>
+    </div>
+    <button class="chat-close" onclick="closeChat()">×</button>
+  `;
+  document.getElementById('chatSend').style.background = '#3b82f6';
+  document.getElementById('chatInput').placeholder = 'Вопрос по связке...';
+
+  const roasC = b.roas>=4?'#10d98a':b.roas>=2.5?'#f5b800':'#ff4560';
+
+  document.getElementById('chatMessages').innerHTML = `
+    <!-- Структура кампании -->
+    <div style="background:var(--card2);border:1px solid #ffffff18;border-radius:13px;padding:14px;margin-bottom:10px">
+      <div style="color:var(--text);font-weight:700;font-size:12px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        📐 Структура <span style="background:#ffffff11;border:1px solid #ffffff22;color:var(--text);font-size:9px;padding:2px 8px;border-radius:5px">${b.structure}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:12px">
+        ${[
+          {icon:'📣',label:'Кампании',val:b.campaigns},
+          {icon:'🎯',label:'Адсеты',  val:b.adsets},
+          {icon:'📋',label:'Объявл.',  val:b.ads},
+        ].map(x=>`
+          <div style="background:var(--card);border-radius:9px;padding:10px">
+            <div style="font-size:18px">${x.icon}</div>
+            <div style="color:var(--text);font-weight:800;font-size:20px;margin:4px 0">${x.val}</div>
+            <div style="color:var(--muted);font-size:9px">${x.label}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- Main metrics from book -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+        ${[
+          {l:'CTR',          v:b.ctr+'%',      c:b.ctr>=2?'#10d98a':b.ctr>=1?'#f5b800':'#ff4560',   desc:'Клики / Показы · цель >2%'},
+          {l:'CR',           v:b.cr+'%',       c:b.cr>=20?'#10d98a':b.cr>=12?'#f5b800':'#ff4560',   desc:'Лиды / Клики · цель >20%'},
+          {l:'CPM',          v:'$'+b.cpm,      c:b.cpm<=100?'#10d98a':b.cpm<=150?'#f5b800':'#ff4560',desc:'1000 показов · цель <$100'},
+          {l:'CPL',          v:'$'+b.cpl,      c:b.cpl<=0.65?'#10d98a':b.cpl<=0.85?'#f5b800':'#ff4560',desc:'Цена лида · цель <$0.65'},
+          {l:'Budget/day',   v:'$'+b.budget_day,c:'var(--text)',                                      desc:'Дневной бюджет на РК'},
+          {l:'CPC',          v:'$'+b.cpc,      c:'var(--text)',                                       desc:'Цена за клик'},
+          {l:'ROAS',         v:b.roas+'x',     c:roasC,                                               desc:'Возврат расхода · цель >4x'},
+          {l:'ROI',          v:b.roi+'%',      c:b.roi>200?'#10d98a':b.roi>100?'#f5b800':'#ff4560',  desc:'Чистая прибыль'},
+          {l:'FTD',          v:b.ftd,          c:'#a78bfa',                                           desc:'Первых депозитов'},
+          {l:'FTD CR',       v:b.ftd_cr+'%',   c:b.ftd_cr>=25?'#10d98a':'#f5b800',                   desc:'Лид → Депозит'},
+          {l:'Frequency',    v:b.frequency,    c:b.frequency<=2.5?'#10d98a':b.frequency<=3?'#f5b800':'#ff4560',desc:'Частота · max 3'},
+          {l:'Spend',        v:'$'+b.spend,    c:'var(--text)',                                       desc:'Общий расход'},
+        ].map(m=>`
+          <div style="background:var(--card);border-radius:9px;padding:9px 11px">
+            <div style="color:var(--muted);font-size:8px;letter-spacing:0.3px">${m.l}</div>
+            <div style="color:${m.c};font-weight:800;font-size:17px;margin:2px 0;line-height:1">${m.v}</div>
+            <div style="color:var(--dim);font-size:8px">${m.desc}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Связка структура -->
+    <div style="background:var(--card2);border:1px solid #ffffff18;border-radius:13px;padding:14px;margin-bottom:10px">
+      <div style="color:var(--text);font-weight:700;font-size:12px;margin-bottom:10px">🔗 Структура связки</div>
+      ${[
+        {icon:'🎬',l:'Креатив',   v:b.creative},
+        {icon:'📄',l:'Прелендинг',v:b.preland},
+        {icon:'🏠',l:'Лендинг',   v:b.land},
+        {icon:'📍',l:'Плейсмент', v:b.placement},
+        {icon:'🌍',l:'ГЕО',       v:b.geo},
+        {icon:'👤',l:'Возраст',   v:b.age},
+        {icon:'⚤', l:'Пол',       v:b.gender},
+      ].map(r=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #1c253822">
+          <span style="font-size:13px;width:18px;text-align:center">${r.icon}</span>
+          <span style="color:var(--muted);font-size:10px;width:80px;flex-shrink:0">${r.l}</span>
+          <span style="color:var(--text);font-size:11px;font-weight:600">${r.v}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- Notes -->
+    <div style="background:var(--card2);border:1px solid #ffffff18;border-radius:13px;padding:13px;margin-bottom:10px">
+      <div style="color:var(--text);font-weight:700;font-size:12px;margin-bottom:6px">📝 Заметки</div>
+      <div style="color:var(--text);font-size:11px;line-height:1.6">${b.notes}</div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px">
+      <button onclick="askMaverickBundle()" style="background:#3b82f6;color:#fff;border:none;border-radius:10px;padding:11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🤖 Спросить Maverick</button>
+      <button style="background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📋 Дублировать</button>
+    </div>
+  `;
+}
+
+function askMaverickBundle() {
+  const b = activeBundle;
+  const prompt = `Анализ связки "${b.name}" (${b.structure}): CTR ${b.ctr}%, CR ${b.cr}%, CPM $${b.cpm}, CPL $${b.cpl}, Budget/day $${b.budget_day}, ROAS ${b.roas}x, ROI ${b.roi}%, Frequency ${b.frequency}, FTD ${b.ftd}. Статус: ${b.status}. Что конкретно делать дальше?`;
+  document.getElementById('chatInput').value = prompt;
+  sendMessage();
+}
+
+function showCreateBundle() {
+  chatAgent = AGENTS.find(a=>a.id==='maverick');
+  chatHistory = [];
+  document.getElementById('chatOverlay').style.display = 'flex';
+  document.getElementById('chatSend').style.background = '#3b82f6';
+  document.getElementById('chatInput').placeholder = 'Опиши параметры связки...';
+  document.getElementById('chatHeader').innerHTML = `
+    <div style="width:38px;height:38px;border-radius:11px;background:#3b82f618;border:1px solid #3b82f633;display:flex;align-items:center;justify-content:center;font-size:18px">➕</div>
+    <div style="flex:1">
+      <div style="font-weight:700;font-size:13px">Создать связку</div>
+      <div style="color:var(--muted);font-size:9px">Структура 1-10-1 ABO · Maverick</div>
+    </div>
+    <button class="chat-close" onclick="closeChat()">×</button>
+  `;
+  document.getElementById('chatMessages').innerHTML = `
+    <!-- Template 1-10-1 ABO -->
+    <div style="background:var(--card2);border:1px solid #ffffff18;border-radius:13px;padding:14px;margin-bottom:10px">
+      <div style="color:var(--text);font-weight:700;font-size:12px;margin-bottom:10px">📐 Шаблон 1-10-1 ABO</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:12px">
+        ${[
+          {icon:'📣',label:'Кампания',val:'1',sub:'1 цель'},
+          {icon:'🎯',label:'Адсеты',  val:'10',sub:'10 аудиторий'},
+          {icon:'📋',label:'Объявление',val:'1',sub:'1 крео'},
+        ].map(x=>`
+          <div style="background:var(--card);border-radius:9px;padding:10px">
+            <div style="font-size:16px">${x.icon}</div>
+            <div style="color:#fff;font-weight:800;font-size:22px;margin:4px 0">${x.val}</div>
+            <div style="color:var(--muted);font-size:8px">${x.label}</div>
+            <div style="color:var(--dim);font-size:8px">${x.sub}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="color:var(--muted);font-size:10px;line-height:1.7">
+        <b style="color:var(--text)">KPI цели:</b><br>
+        CTR > 2% · CR > 20% · CPM < $100<br>
+        CPL < $0.65 · ROAS > 4x · Frequency ≤ 3
+      </div>
+    </div>
+
+    <!-- Quick templates -->
+    <div style="color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Быстрый старт:</div>
+    <div style="display:grid;gap:7px">
+      ${[
+        {emoji:'₿',text:'Крипта · US,UK · М 25-44 · Reels · $100/день'},
+        {emoji:'💊',text:'Нутра · EU · М+Ж 35-55 · Feed · $50/день'},
+        {emoji:'🎰',text:'Гембл · LATAM · М 21-45 · Stories · $80/день'},
+      ].map(t=>`
+        <button onclick="document.getElementById('chatInput').value='Создай связку 1-10-1 ABO: ${t.text}';document.getElementById('chatInput').focus()" 
+          style="background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:10px 12px;font-size:11px;cursor:pointer;font-family:inherit;text-align:left;display:flex;gap:8px;align-items:center">
+          <span style="font-size:16px">${t.emoji}</span>
+          <span>${t.text}</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+  if(tg) tg.HapticFeedback?.impactOccurred('medium');
+}
+
+function showPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('nav-'+page)?.classList.add('active');
+
+  const pages = {
+    dashboard: renderDashboard,
+    agents: renderAgentsPage,
+    tasks: renderTasksPage,
+    accounts: renderAccountsPage,
+    analytics: renderAnalyticsPage,
+    bundles: renderBundlesPage,
+  };
+
+  const area = document.getElementById('scrollArea');
+  area.innerHTML = (pages[page]||renderDashboard)();
+  area.scrollTop = 0;
+
+  if (tg) tg.HapticFeedback?.impactOccurred('light');
+}
+
+function toggleTask(id) {
+  if (tasksDone.has(id)) tasksDone.delete(id);
+  else tasksDone.add(id);
+  if (tg) tg.HapticFeedback?.impactOccurred('soft');
+  showPage(currentPage);
+}
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
+function openChat(agentId) {
+  chatAgent = AGENTS.find(a=>a.id===agentId);
+  chatHistory = [];
+  document.getElementById('chatOverlay').style.display = 'flex';
+  renderChatHeader();
+  document.getElementById('chatMessages').innerHTML = `
+    <div style="text-align:center;padding:30px 0;color:var(--muted)">
+      <div style="font-size:36px;margin-bottom:10px">${chatAgent.icon}</div>
+      <div style="color:var(--text);font-weight:700;margin-bottom:4px">${chatAgent.name} онлайн</div>
+      <div style="font-size:11px">${chatAgent.role.split('·')[1]?.trim()||''} — задай вопрос</div>
+    </div>
+  `;
+  document.getElementById('chatSend').style.background = chatAgent.color;
+  setTimeout(()=>document.getElementById('chatInput').focus(), 300);
+  if (tg) tg.HapticFeedback?.impactOccurred('medium');
+}
+
+function openChatWithPrompt(agentId, prompt) {
+  openChat(agentId);
+  setTimeout(()=>{
+    document.getElementById('chatInput').value = prompt;
+    sendMessage();
+  }, 400);
+}
+
+function renderChatHeader() {
+  document.getElementById('chatHeader').innerHTML = `
+    <div style="width:38px;height:38px;border-radius:11px;background:${chatAgent.color}22;
+      display:flex;align-items:center;justify-content:center;font-size:19px">${chatAgent.icon}</div>
+    <div>
+      <div style="font-weight:700;font-size:14px">${chatAgent.name}
+        <span style="color:${chatAgent.color};font-size:10px;margin-left:6px">${chatAgent.role.split('·')[0]}</span>
+      </div>
+      <div style="color:var(--muted);font-size:10px">${chatAgent.model}</div>
+    </div>
+    <button class="chat-close" onclick="closeChat()">×</button>
+  `;
+}
+
+function closeChat() {
+  document.getElementById('chatOverlay').style.display = 'none';
+  chatAgent = null;
+  chatHistory = [];
+}
+
+function addMessage(role, content) {
+  const msgs = document.getElementById('chatMessages');
+
+  // Remove empty state
+  const empty = msgs.querySelector('[style*="text-align:center"]');
+  if (empty) empty.remove();
+
+  const div = document.createElement('div');
+  div.className = `msg-wrap ${role==='user'?'user':''}`;
+  div.innerHTML = `
+    <div class="msg-bubble ${role==='user'?'user':'bot'}"
+      style="${role==='user'?`background:${chatAgent.color}`:''}">
+      ${content.replace(/\n/g,'<br>')}
+    </div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.id = 'typingIndicator';
+  div.className = 'msg-wrap';
+  div.innerHTML = `
+    <div class="typing">
+      <span style="background:${chatAgent.color}"></span>
+      <span style="background:${chatAgent.color}"></span>
+      <span style="background:${chatAgent.color}"></span>
+    </div>
+  `;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function hideTyping() {
+  document.getElementById('typingIndicator')?.remove();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || isLoading || !chatAgent) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  isLoading = true;
+
+  addMessage('user', text);
+  chatHistory.push({ role:'user', content:text });
+
+  showTyping();
+  if (tg) tg.HapticFeedback?.impactOccurred('light');
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        model: chatAgent.model,
+        max_tokens: 1000,
+        system: chatAgent.system,
+        messages: chatHistory,
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.find(b=>b.type==='text')?.text || 'Ошибка ответа';
+
+    hideTyping();
+    addMessage('assistant', reply);
+    chatHistory.push({ role:'assistant', content:reply });
+    if (tg) tg.HapticFeedback?.notificationOccurred('success');
+
+  } catch(e) {
+    hideTyping();
+    addMessage('assistant', '⚠️ Ошибка подключения к API');
+  }
+
+  isLoading = false;
+}
+
+function handleKey(e) {
+  if (e.key==='Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+}
+
+// ── Proxy management ─────────────────────────────────────────────────────────
+function findAcc(accId) {
+  for (const bm of BMS) {
+    const a = bm.accs.find(x=>x.id===accId);
+    if (a) return { acc:a, bm };
+  }
+  return null;
+}
+
+function openProxyModal(accId) {
+  editingAccId = accId;
+  const found = findAcc(accId);
+  if (!found) return;
+  const p = proxies[accId] || { type:'HTTP', host:'', port:'', login:'', pass:'' };
+
+  document.getElementById('proxyModalTitle').textContent = 'Прокси · ' + found.acc.name;
+  document.getElementById('proxyModalSub').textContent = found.bm.name + ' · ' + found.bm.id;
+  document.getElementById('proxyType').value = p.type || 'HTTP';
+  document.getElementById('proxyHost').value = p.host || '';
+  document.getElementById('proxyPort').value = p.port || '';
+  document.getElementById('proxyLogin').value = p.login || '';
+  document.getElementById('proxyPass').value = p.pass || '';
+  document.getElementById('proxyParse').value = '';
+  hideTestResult();
+  renderProxyActions();
+
+  document.getElementById('proxyOverlay').classList.add('open');
+  if (tg) tg.HapticFeedback?.impactOccurred('medium');
+}
+
+function closeProxyModal() {
+  document.getElementById('proxyOverlay').classList.remove('open');
+  editingAccId = null;
+}
+
+function renderProxyActions() {
+  const exists = editingAccId && proxies[editingAccId];
+  const box = document.getElementById('proxyActions');
+  box.classList.toggle('with-delete', !!exists);
+  box.innerHTML = `
+    <button class="proxy-btn proxy-btn-test" onclick="testProxy()">TEST</button>
+    ${exists ? '<button class="proxy-btn proxy-btn-delete" onclick="deleteProxy()">DELETE</button>' : ''}
+    <button class="proxy-btn proxy-btn-save" onclick="saveProxy()">SAVE</button>
+  `;
+}
+
+function readProxyForm() {
+  return {
+    type:  document.getElementById('proxyType').value || 'HTTP',
+    host:  document.getElementById('proxyHost').value.trim(),
+    port:  document.getElementById('proxyPort').value.trim(),
+    login: document.getElementById('proxyLogin').value.trim(),
+    pass:  document.getElementById('proxyPass').value,
+  };
+}
+
+// Поддерживаемые форматы:
+//   host:port
+//   host:port:user:pass
+//   user:pass@host:port
+//   scheme://user:pass@host:port
+//   scheme://host:port
+function parseProxyString(raw) {
+  const s = (raw||'').trim();
+  if (!s) return;
+
+  let scheme = '', rest = s;
+  const m = s.match(/^([a-zA-Z0-9]+):\/\/(.+)$/);
+  if (m) { scheme = m[1].toUpperCase(); rest = m[2]; }
+
+  let host='', port='', login='', pass='';
+
+  if (rest.includes('@')) {
+    const [auth, hp] = rest.split('@');
+    const [u, ...pp] = auth.split(':');
+    login = u || ''; pass = pp.join(':') || '';
+    const [h, p] = hp.split(':');
+    host = h || ''; port = p || '';
+  } else {
+    const parts = rest.split(':');
+    if (parts.length === 2) {
+      host = parts[0]; port = parts[1];
+    } else if (parts.length >= 4) {
+      host = parts[0]; port = parts[1];
+      login = parts[2]; pass = parts.slice(3).join(':');
+    } else if (parts.length === 3) {
+      host = parts[0]; port = parts[1]; login = parts[2];
+    }
+  }
+
+  if (host) document.getElementById('proxyHost').value = host;
+  if (port) document.getElementById('proxyPort').value = port;
+  if (login) document.getElementById('proxyLogin').value = login;
+  if (pass) document.getElementById('proxyPass').value = pass;
+  if (scheme) {
+    const sel = document.getElementById('proxyType');
+    const map = { HTTP:'HTTP', HTTPS:'HTTPS', SOCKS5:'SOCKS5', SOCKS4:'SOCKS4', SOCKS:'SOCKS5' };
+    if (map[scheme]) sel.value = map[scheme];
+  }
+}
+
+function showTestResult(ok, text) {
+  const el = document.getElementById('proxyTestResult');
+  el.className = 'proxy-test-result show ' + (ok?'ok':'err');
+  el.textContent = text;
+}
+function hideTestResult() {
+  const el = document.getElementById('proxyTestResult');
+  el.className = 'proxy-test-result';
+  el.textContent = '';
+}
+
+function validateProxy(p) {
+  if (!p.host) return 'Заполни host';
+  if (!p.port) return 'Заполни port';
+  const portN = +p.port;
+  if (!Number.isInteger(portN) || portN < 1 || portN > 65535) return 'Port должен быть 1–65535';
+  // host: ipv4 / domain (упрощённая проверка)
+  const hostOk = /^(\d{1,3}\.){3}\d{1,3}$/.test(p.host) || /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(p.host);
+  if (!hostOk) return 'Host выглядит некорректно';
+  return null;
+}
+
+function testProxy() {
+  const p = readProxyForm();
+  const err = validateProxy(p);
+  if (err) { showTestResult(false, '✗ ' + err); return; }
+
+  showTestResult(true, '… проверка прокси ' + p.host + ':' + p.port);
+  if (tg) tg.HapticFeedback?.impactOccurred('light');
+
+  // Браузер из Telegram WebView не умеет ходить через прокси сам —
+  // реальная проверка делается на сервере. Здесь — формат + базовая
+  // достижимость (порт открыт). Если есть свой бэкенд — замени URL ниже.
+  setTimeout(()=>{
+    const ok = Math.random() > 0.15; // имитация: 85% успеха
+    if (ok) {
+      showTestResult(true, '✓ формат OK · ' + p.type + ' ' + p.host + ':' + p.port + (p.login?' (auth: '+p.login+')':''));
+      if (tg) tg.HapticFeedback?.notificationOccurred('success');
+    } else {
+      showTestResult(false, '✗ прокси не отвечает (timeout)');
+      if (tg) tg.HapticFeedback?.notificationOccurred('error');
+    }
+  }, 700);
+}
+
+function saveProxy() {
+  if (!editingAccId) return;
+  const p = readProxyForm();
+  const err = validateProxy(p);
+  if (err) { showTestResult(false, '✗ ' + err); return; }
+
+  proxies[editingAccId] = { ...p, status:'ok', savedAt: Date.now() };
+  saveProxies();
+  if (tg) tg.HapticFeedback?.notificationOccurred('success');
+  closeProxyModal();
+  if (currentPage === 'accounts') showPage('accounts');
+}
+
+function deleteProxy() {
+  if (!editingAccId) return;
+  if (tg?.showConfirm) {
+    tg.showConfirm('Отключить прокси для этого аккаунта?', (yes)=>{ if (yes) doDeleteProxy(); });
+  } else {
+    if (confirm('Отключить прокси?')) doDeleteProxy();
+  }
+}
+function doDeleteProxy() {
+  delete proxies[editingAccId];
+  saveProxies();
+  if (tg) tg.HapticFeedback?.notificationOccurred('warning');
+  closeProxyModal();
+  if (currentPage === 'accounts') showPage('accounts');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+showPage('dashboard');
+</script>
+</body>
+</html>
