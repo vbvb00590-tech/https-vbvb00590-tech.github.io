@@ -441,64 +441,8 @@
 <!-- Header -->
 <div class="header">
   <div class="header-logo">
-    <div style="background:#000;border-radius:8px;border:1px solid rgba(255,255,255,0.12);box-shadow:0 0 16px rgba(255,255,255,0.08);width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
-        <defs>
-          <filter id="glow-strong">
-            <feGaussianBlur stdDeviation="2.5" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-          <filter id="glow-soft">
-            <feGaussianBlur stdDeviation="1.2" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-          <filter id="glow-mid">
-            <feGaussianBlur stdDeviation="1.8" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-
-        <!-- LEFT LEG -->
-        <line x1="50" y1="8" x2="10" y2="78" stroke="white" stroke-width="1.8" filter="url(#glow-strong)"/>
-        <!-- RIGHT LEG -->
-        <line x1="50" y1="8" x2="90" y2="78" stroke="white" stroke-width="1.8" filter="url(#glow-strong)"/>
-
-        <!-- ARCH (concave bottom curve) -->
-        <path d="M10,78 Q50,42 90,78" fill="none" stroke="white" stroke-width="1.8" filter="url(#glow-strong)"/>
-
-        <!-- INNER SMALL TRIANGLE top -->
-        <polygon points="50,8 38,32 62,32" fill="none" stroke="white" stroke-width="1.0" filter="url(#glow-soft)" opacity="0.9"/>
-
-        <!-- GRID horizontals inside triangle -->
-        <line x1="36" y1="32" x2="64" y2="32" stroke="white" stroke-width="0.8" filter="url(#glow-soft)" opacity="0.85"/>
-        <line x1="26" y1="52" x2="74" y2="52" stroke="white" stroke-width="0.8" filter="url(#glow-soft)" opacity="0.75"/>
-        <line x1="16" y1="68" x2="84" y2="68" stroke="white" stroke-width="0.7" filter="url(#glow-soft)" opacity="0.6"/>
-
-        <!-- GRID diagonals from apex left side -->
-        <line x1="50" y1="8" x2="28" y2="68" stroke="white" stroke-width="0.6" opacity="0.55"/>
-        <line x1="50" y1="8" x2="38" y2="68" stroke="white" stroke-width="0.6" opacity="0.55"/>
-        <line x1="50" y1="8" x2="20" y2="78" stroke="white" stroke-width="0.6" opacity="0.45"/>
-        <line x1="50" y1="8" x2="32" y2="78" stroke="white" stroke-width="0.6" opacity="0.45"/>
-
-        <!-- GRID diagonals from apex right side -->
-        <line x1="50" y1="8" x2="72" y2="68" stroke="white" stroke-width="0.6" opacity="0.55"/>
-        <line x1="50" y1="8" x2="62" y2="68" stroke="white" stroke-width="0.6" opacity="0.55"/>
-        <line x1="50" y1="8" x2="80" y2="78" stroke="white" stroke-width="0.6" opacity="0.45"/>
-        <line x1="50" y1="8" x2="68" y2="78" stroke="white" stroke-width="0.6" opacity="0.45"/>
-
-        <!-- GLITCH lines left -->
-        <line x1="10" y1="52" x2="20" y2="52" stroke="white" stroke-width="2.5" opacity="0.95" filter="url(#glow-mid)"/>
-        <line x1="8"  y1="54" x2="14" y2="54" stroke="white" stroke-width="1.2" opacity="0.6"/>
-        <!-- GLITCH lines right -->
-        <line x1="80" y1="48" x2="92" y2="48" stroke="white" stroke-width="2.0" opacity="0.85" filter="url(#glow-mid)"/>
-        <line x1="84" y1="50" x2="91" y2="50" stroke="white" stroke-width="1.0" opacity="0.5"/>
-        <!-- GLITCH center top -->
-        <line x1="44" y1="32" x2="50" y2="32" stroke="white" stroke-width="2.2" opacity="0.9" filter="url(#glow-mid)"/>
-        <line x1="46" y1="30" x2="52" y2="30" stroke="white" stroke-width="1.0" opacity="0.5"/>
-
-        <!-- Apex glow dot -->
-        <circle cx="50" cy="8" r="1.5" fill="white" filter="url(#glow-strong)"/>
-      </svg>
+    <div style="border-radius:8px;overflow:hidden;width:40px;height:40px;flex-shrink:0;">
+      <img src="image.png" style="width:40px;height:40px;object-fit:cover;display:block;">
     </div>
     <div>
       <div class="header-title" style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:900;letter-spacing:-0.3px;color:#fff;">FX. <span style="color:rgba(255,255,255,0.55)">Social Club</span></div>
